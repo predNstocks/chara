@@ -3,7 +3,7 @@ name: Build Windows EXE
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:   # Allows you to run it manually
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,11 +26,19 @@ jobs:
 
       - name: Build EXE
         run: |
-          pyinstaller --onefile --noconsole --name chara-proxy --add-data "script;script" main.py
+          pyinstaller --onefile --noconsole --name chara-proxy ^
+            --hidden-import cert_installer ^
+            --hidden-import constants ^
+            --hidden-import lan_utils ^
+            --hidden-import google_ip_scanner ^
+            --hidden-import logging_utils ^
+            --hidden-import mitm ^
+            --hidden-import proxy_server ^
+            --add-data "script;script" ^
+            main.py
 
       - name: Upload Executable
         uses: actions/upload-artifact@v4
         with:
           name: chara-proxy-windows
           path: dist/chara-proxy.exe
-          retention-days: 30

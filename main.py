@@ -20,6 +20,12 @@ _SRC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")
 if _SRC_DIR not in sys.path:
     sys.path.insert(0, _SRC_DIR)
 
+# ====================== STANDARD LIBRARY ======================
+import json
+import os
+from pathlib import Path
+
+# ====================== YOUR PROJECT MODULES ======================
 from cert_installer import install_ca, uninstall_ca, is_ca_trusted
 from constants import __version__
 from lan_utils import log_lan_access
@@ -28,78 +34,63 @@ from logging_utils import configure as configure_logging, print_banner
 from mitm import CA_CERT_FILE
 from proxy_server import ProxyServer
 
-
-import json
-import os
-from pathlib import Path
-
+# ====================== SETUP CODE (NEW) ======================
 CONFIG_FILE = "config.json"
 DEPLOY_DIR = Path("deploy")
 
 def first_time_setup():
-    """Run only the first time the user runs the exe"""
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     
-    print("\n" + "="*50)
-    print("🚀 First Time Setup - chara-proxy")
-    print("="*50)
+    print("\n" + "="*60)
+    print("🚀 chara-proxy - First Time Setup")
+    print("="*60)
     
-    auth_key = input("Enter your AUTH_KEY (secret password): ").strip()
-    worker_url = input("Enter your WORKER_URL (example: myworker.workers.dev): ").strip()
+    auth_key = input("Enter your AUTH_KEY: ").strip()
+    worker_url = input("Enter your WORKER_URL: ").strip()
     
     if not worker_url.startswith(("http://", "https://")):
         worker_url = "https://" + worker_url
     
-    config = {
-        "AUTH_KEY": auth_key,
-        "WORKER_URL": worker_url
-    }
+    config = {"AUTH_KEY": auth_key, "WORKER_URL": worker_url}
     
-    # Save config
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
     
-    print("\n✅ Configuration saved to config.json")
+    print("✅ Config saved!\n")
     return config
 
 
 def generate_deploy_files(config):
-    """Create ready-to-paste files for user"""
     DEPLOY_DIR.mkdir(exist_ok=True)
-    
     try:
-        # Read original template files
         with open("script/Code.gs", "r", encoding="utf-8") as f:
-            code_gs = f.read()
+            gs = f.read()
         with open("script/worker.js", "r", encoding="utf-8") as f:
-            worker_js = f.read()
+            js = f.read()
         
-        # Replace placeholders
-        code_gs = code_gs.replace("$place_holder1", config["AUTH_KEY"])
-        code_gs = code_gs.replace("$place_holder2", config["WORKER_URL"])
-        worker_js = worker_js.replace("$place_holder2", config["WORKER_URL"])
+        gs = gs.replace("$place_holder1", config["AUTH_KEY"])
+        gs = gs.replace("$place_holder2", config["WORKER_URL"])
+        js = js.replace("$place_holder2", config["WORKER_URL"])
         
-        # Write files
-        (DEPLOY_DIR / "Code.gs").write_text(code_gs, encoding="utf-8")
-        (DEPLOY_DIR / "worker.js").write_text(worker_js, encoding="utf-8")
+        (DEPLOY_DIR / "Code.gs").write_text(gs, encoding="utf-8")
+        (DEPLOY_DIR / "worker.js").write_text(js, encoding="utf-8")
         
-        print(f"✅ Deploy files created in '{DEPLOY_DIR}' folder!")
-        print("   → Copy Code.gs into Google Apps Script")
-        print("   → Copy worker.js into Cloudflare Worker")
-        
+        print("✅ Deploy files created in 'deploy/' folder!")
     except Exception as e:
-        print(f"⚠️ Could not generate deploy files: {e}")
+        print(f"Warning: {e}")
 
 
-# ==================== CALL THE SETUP ====================
+# ====================== START HERE ======================
 if __name__ == "__main__":
     config = first_time_setup()
     generate_deploy_files(config)
     
-    # === YOUR ORIGINAL CODE STARTS HERE ===
-    # (keep everything that was already in main.py below this)
+    # ==================== YOUR ORIGINAL CODE ====================
+    # Paste all your original main.py code starting from here
+    # (configure_logging, print_banner, ProxyServer, etc.)
+    
 def setup_logging(level_name: str):
     configure_logging(level_name)
 
