@@ -35,21 +35,27 @@ from mitm import CA_CERT_FILE
 from proxy_server import ProxyServer
 
 # ====================== SETUP CODE (NEW) ======================
-CONFIG_FILE = "config.json"
-DEPLOY_DIR = Path("deploy")
+HERE = Path(__file__).resolve().parent
+CONFIG_FILE = HERE / "config.json"
+CONFIG_EXAMPLE_FILE = HERE / "config.example.json"
+DEPLOY_DIR = HERE / "deploy"
 
 def first_time_setup():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+    if CONFIG_FILE.exists():
+        with CONFIG_FILE.open("r", encoding="utf-8") as f:
             return json.load(f)
-    
-    # Load the example config
-    example_config = json.loads(Path("config.example.json").read_text(encoding="utf-8"))
-    
+
+    if not CONFIG_EXAMPLE_FILE.exists():
+        print(f"Missing example config: {CONFIG_EXAMPLE_FILE}")
+        print("Please ensure config.example.json is present alongside main.py.")
+        sys.exit(1)
+
+    example_config = json.loads(CONFIG_EXAMPLE_FILE.read_text(encoding="utf-8"))
+
     print("\n" + "="*60)
     print("🚀 chara-proxy - First Time Setup")
     print("="*60)
-    
+
     try:
         auth_key = input("Enter your AUTH_KEY: ").strip()
         script_id = input("Enter your SCRIPT_ID (Apps Script Deployment ID): ").strip()
@@ -64,18 +70,17 @@ def first_time_setup():
             sys.exit(1)
         else:
             raise
-    
+
     if not worker_url.startswith(("http://", "https://")):
         worker_url = "https://" + worker_url
-    
-    # Update the config with user inputs
+
     example_config["auth_key"] = auth_key
     example_config["script_id"] = script_id
     example_config["worker_url"] = worker_url
-    
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+
+    with CONFIG_FILE.open("w", encoding="utf-8") as f:
         json.dump(example_config, f, indent=2)
-    
+
     print("✅ Config saved!\n")
     return example_config
 
