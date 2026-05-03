@@ -43,23 +43,41 @@ def first_time_setup():
         with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     
+    # Load the example config
+    example_config = json.loads(Path("config.example.json").read_text(encoding="utf-8"))
+    
     print("\n" + "="*60)
     print("🚀 chara-proxy - First Time Setup")
     print("="*60)
     
-    auth_key = input("Enter your AUTH_KEY: ").strip()
-    worker_url = input("Enter your WORKER_URL: ").strip()
+    try:
+        auth_key = input("Enter your AUTH_KEY: ").strip()
+        script_id = input("Enter your SCRIPT_ID (Apps Script Deployment ID): ").strip()
+        worker_url = input("Enter your WORKER_URL: ").strip()
+    except RuntimeError as e:
+        if "lost sys.stdin" in str(e):
+            print("❌ Cannot prompt for input in this environment.")
+            print("Please create config.json manually:")
+            print("1. Copy config.example.json to config.json")
+            print("2. Edit config.json with your auth_key, script_id, and worker_url")
+            print("3. Re-run the installer.")
+            sys.exit(1)
+        else:
+            raise
     
     if not worker_url.startswith(("http://", "https://")):
         worker_url = "https://" + worker_url
     
-    config = {"AUTH_KEY": auth_key, "WORKER_URL": worker_url}
+    # Update the config with user inputs
+    example_config["auth_key"] = auth_key
+    example_config["script_id"] = script_id
+    example_config["worker_url"] = worker_url
     
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=2)
+        json.dump(example_config, f, indent=2)
     
     print("✅ Config saved!\n")
-    return config
+    return example_config
 
 
 def generate_deploy_files(config):
@@ -70,8 +88,8 @@ def generate_deploy_files(config):
         with open("script/worker.js", "r", encoding="utf-8") as f:
             js = f.read()
         
-        gs = gs.replace("$place_holder1", config["AUTH_KEY"])
-        gs = gs.replace("$place_holder2", config["WORKER_URL"])
+        gs = gs.replace("$place_holder1", config["auth_key"])
+        gs = gs.replace("$place_holder2", config["worker_url"])
         js = js.replace("$place_holder2", config["WORKER_URL"])
         
         (DEPLOY_DIR / "Code.gs").write_text(gs, encoding="utf-8")
