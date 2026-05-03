@@ -29,6 +29,77 @@ from mitm import CA_CERT_FILE
 from proxy_server import ProxyServer
 
 
+import json
+import os
+from pathlib import Path
+
+CONFIG_FILE = "config.json"
+DEPLOY_DIR = Path("deploy")
+
+def first_time_setup():
+    """Run only the first time the user runs the exe"""
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    
+    print("\n" + "="*50)
+    print("🚀 First Time Setup - chara-proxy")
+    print("="*50)
+    
+    auth_key = input("Enter your AUTH_KEY (secret password): ").strip()
+    worker_url = input("Enter your WORKER_URL (example: myworker.workers.dev): ").strip()
+    
+    if not worker_url.startswith(("http://", "https://")):
+        worker_url = "https://" + worker_url
+    
+    config = {
+        "AUTH_KEY": auth_key,
+        "WORKER_URL": worker_url
+    }
+    
+    # Save config
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2)
+    
+    print("\n✅ Configuration saved to config.json")
+    return config
+
+
+def generate_deploy_files(config):
+    """Create ready-to-paste files for user"""
+    DEPLOY_DIR.mkdir(exist_ok=True)
+    
+    try:
+        # Read original template files
+        with open("script/Code.gs", "r", encoding="utf-8") as f:
+            code_gs = f.read()
+        with open("script/worker.js", "r", encoding="utf-8") as f:
+            worker_js = f.read()
+        
+        # Replace placeholders
+        code_gs = code_gs.replace("$place_holder1", config["AUTH_KEY"])
+        code_gs = code_gs.replace("$place_holder2", config["WORKER_URL"])
+        worker_js = worker_js.replace("$place_holder2", config["WORKER_URL"])
+        
+        # Write files
+        (DEPLOY_DIR / "Code.gs").write_text(code_gs, encoding="utf-8")
+        (DEPLOY_DIR / "worker.js").write_text(worker_js, encoding="utf-8")
+        
+        print(f"✅ Deploy files created in '{DEPLOY_DIR}' folder!")
+        print("   → Copy Code.gs into Google Apps Script")
+        print("   → Copy worker.js into Cloudflare Worker")
+        
+    except Exception as e:
+        print(f"⚠️ Could not generate deploy files: {e}")
+
+
+# ==================== CALL THE SETUP ====================
+if __name__ == "__main__":
+    config = first_time_setup()
+    generate_deploy_files(config)
+    
+    # === YOUR ORIGINAL CODE STARTS HERE ===
+    # (keep everything that was already in main.py below this)
 def setup_logging(level_name: str):
     configure_logging(level_name)
 
