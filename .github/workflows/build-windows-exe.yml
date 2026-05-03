@@ -1,4 +1,4 @@
-name: Build Windows EXE
+=name: Build Windows EXE
 
 on:
   push:
@@ -27,19 +27,11 @@ jobs:
       - name: Build EXE
         shell: cmd
         run: |
-          pyinstaller --onefile --noconsole --name chara-proxy ^
-            --hidden-import cert_installer ^
-            --hidden-import constants ^
-            --hidden-import lan_utils ^
-            --hidden-import google_ip_scanner ^
-            --hidden-import logging_utils ^
-            --hidden-import mitm ^
-            --hidden-import proxy_server ^
-            --add-data "script;script" ^
-            main.py
+          pyinstaller --clean chara.spec
 
       - name: Upload Executable
         uses: actions/upload-artifact@v4
         with:
           name: chara-proxy-windows
           path: dist/chara-proxy.exe
+          retention-days: 30
