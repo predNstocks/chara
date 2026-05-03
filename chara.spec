@@ -18,7 +18,7 @@ hiddenimports = [
 
 a = Analysis(
     ['main.py'],
-    pathex=['.'],                    # Important: include current directory
+    pathex=['.', 'src'],             # Include both root and src directory to find modules
     binaries=[],
     datas=datas,
     hiddenimports=hiddenimports,
