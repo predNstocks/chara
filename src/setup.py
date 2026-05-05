@@ -18,9 +18,25 @@ import string
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-CONFIG_PATH = HERE / "config.json"
-EXAMPLE_PATH = HERE / "config.example.json"
+import sys
+import os
+from pathlib import Path
+
+def get_base_path():
+    # This points to the folder where the .exe file lives
+    return Path(os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__)).resolve()
+
+def get_bundle_path(relative_path):
+    # This points to the internal temp folder where bundled files are stored
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return Path(os.path.join(base_path, relative_path))
+
+# 1. Config.json should be NEXT TO the .exe (User's folder)
+CONFIG_PATH = get_base_path() / "config.json"
+
+# 2. Example path is INSIDE the .exe (Bundled resource)
+# If you used --add-data "src/config.example.json;.", it's in the root of the bundle
+EXAMPLE_PATH = get_bundle_path("config.example.json")
 
 
 def _c(code: str, text: str) -> str:
