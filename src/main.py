@@ -40,6 +40,21 @@ CONFIG_FILE = HERE / "config.json"
 CONFIG_EXAMPLE_FILE = HERE / "config.example.json"
 DEPLOY_DIR = HERE / "deploy"
 
+import sys
+import os
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
+
+
 def first_time_setup():
     if CONFIG_FILE.exists():
         with CONFIG_FILE.open("r", encoding="utf-8") as f:
@@ -84,14 +99,19 @@ def first_time_setup():
     print("✅ Config saved!\n")
     return example_config
 
-
+# Update your loading code to use the helper:
 def generate_deploy_files(config):
     DEPLOY_DIR.mkdir(exist_ok=True)
     try:
-        with open("script/Code.gs", "r", encoding="utf-8") as f:
+        # WRAP THE PATH HERE
+        gs_path = resource_path(os.path.join("script", "Code.gs"))
+        js_path = resource_path(os.path.join("script", "worker.js"))
+        
+        with open(gs_path, "r", encoding="utf-8") as f:
             gs = f.read()
-        with open("script/worker.js", "r", encoding="utf-8") as f:
+        with open(js_path, "r", encoding="utf-8") as f:
             js = f.read()
+        # ... rest of your code
         
         gs = gs.replace("$place_holder1", config["auth_key"])
         gs = gs.replace("$place_holder2", config["worker_url"])
