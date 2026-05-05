@@ -27,7 +27,7 @@ jobs:
       - name: Build EXE
         shell: cmd
         run: |
-          pyinstaller --clean chara.spec
+          pyinstaller --clean -c chara.spec
 
       - name: Upload Executable
         uses: actions/upload-artifact@v4
