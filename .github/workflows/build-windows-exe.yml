@@ -26,6 +26,7 @@ jobs:
 
       - name: Build EXE
         run: |
+          cd src
           pyinstaller --onefile --console --name chara-proxy --add-data "script;script" main.py
 
       - name: Upload Executable
