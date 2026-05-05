@@ -26,7 +26,7 @@ jobs:
 
       - name: Build EXE
         run: |
-          pyinstaller --onefile --console --name chara-proxy --add-data "script;script" --add-data "src;src" src/main.py
+          pyinstaller --onefile --console --name chara-proxy --add-data "script;script" --add-data "src/config.example.json;." --add-data "src;src" src/main.py
 
       - name: Upload Executable
         uses: actions/upload-artifact@v4
