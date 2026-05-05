@@ -22,21 +22,31 @@ import sys
 import os
 from pathlib import Path
 
-def get_base_path():
-    # This points to the folder where the .exe file lives
-    return Path(os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__)).resolve()
+import sys
+import os
+from pathlib import Path
 
-def get_bundle_path(relative_path):
-    # This points to the internal temp folder where bundled files are stored
+def get_resource_path(relative_path):
+    """Get absolute path to bundled resource (inside the EXE)."""
     base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
     return Path(os.path.join(base_path, relative_path))
 
-# 1. Config.json should be NEXT TO the .exe (User's folder)
-CONFIG_PATH = get_base_path() / "config.json"
+def get_user_path(relative_path):
+    """Get absolute path to file next to the .exe (outside the EXE)."""
+    if getattr(sys, 'frozen', False):
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = os.path.abspath(".")
+    return Path(os.path.join(base_path, relative_path))
 
-# 2. Example path is INSIDE the .exe (Bundled resource)
-# If you used --add-data "src/config.example.json;.", it's in the root of the bundle
-EXAMPLE_PATH = get_bundle_path("config.example.json")
+# --- Application Paths ---
+CONFIG_FILE = get_user_path("config.json")
+# This matches the "." destination in --add-data
+CONFIG_EXAMPLE_FILE = get_resource_path("config.example.json") 
+# This matches the "script;script" destination in --add-data
+SCRIPT_DIR = get_resource_path("script") 
+DEPLOY_DIR = get_user_path("deploy")
+
 
 
 def _c(code: str, text: str) -> str:

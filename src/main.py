@@ -35,13 +35,33 @@ from mitm import CA_CERT_FILE
 from proxy_server import ProxyServer
 
 # ====================== SETUP CODE (NEW) ======================
-HERE = Path(__file__).resolve().parent
-CONFIG_FILE = HERE / "config.json"
-CONFIG_EXAMPLE_FILE = HERE / "config.example.json"
-DEPLOY_DIR = HERE / "deploy"
 
 import sys
 import os
+import sys
+import os
+from pathlib import Path
+
+def get_resource_path(relative_path):
+    """Get absolute path to bundled resource (inside the EXE)."""
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return Path(os.path.join(base_path, relative_path))
+
+def get_user_path(relative_path):
+    """Get absolute path to file next to the .exe (outside the EXE)."""
+    if getattr(sys, 'frozen', False):
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = os.path.abspath(".")
+    return Path(os.path.join(base_path, relative_path))
+
+# --- Application Paths ---
+CONFIG_FILE = get_user_path("config.json")
+# This matches the "." destination in --add-data
+CONFIG_EXAMPLE_FILE = get_resource_path("config.example.json") 
+# This matches the "script;script" destination in --add-data
+SCRIPT_DIR = get_resource_path("script") 
+DEPLOY_DIR = get_user_path("deploy")
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -103,15 +123,11 @@ def first_time_setup():
 def generate_deploy_files(config):
     DEPLOY_DIR.mkdir(exist_ok=True)
     try:
-        # WRAP THE PATH HERE
-        gs_path = resource_path(os.path.join("script", "Code.gs"))
-        js_path = resource_path(os.path.join("script", "worker.js"))
-        
-        with open(gs_path, "r", encoding="utf-8") as f:
+        # Use the SCRIPT_DIR helper
+        with open(SCRIPT_DIR / "Code.gs", "r", encoding="utf-8") as f:
             gs = f.read()
-        with open(js_path, "r", encoding="utf-8") as f:
+        with open(SCRIPT_DIR / "worker.js", "r", encoding="utf-8") as f:
             js = f.read()
-        # ... rest of your code
         
         gs = gs.replace("$place_holder1", config["auth_key"])
         gs = gs.replace("$place_holder2", config["worker_url"])
